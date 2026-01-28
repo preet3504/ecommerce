@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique @db.VarChar(191)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(191)
+  role      Role     @default(USER)
+  image     String?  @db.VarChar(500)
+  phone     String?  @db.VarChar(20)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders    Order[]
+  cart      CartItem[]
+  wishlist  Wishlist[]
+  reviews   Review[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String   @db.VarChar(191)
+  slug          String   @unique @db.VarChar(191)
+  description   String   @db.Text
+  price         Float
+  discountPrice Float?
+  stock         Int
+  images        Json
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
+  featured      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  wishlist      Wishlist[]
+  reviews       Review[]
+  offers        ProductOffer[]
+  
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique @db.VarChar(191)
+  slug        String    @unique @db.VarChar(191)
+  description String?   @db.Text
+  image       String?   @db.VarChar(500)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  
+  @@index([slug])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String   @db.VarChar(100)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String   @db.VarChar(100)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String   @db.VarChar(100)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String   @db.VarChar(100)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  orderNumber     String        @unique @db.VarChar(191)
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Float
+  shippingAddress Json
+  paymentMethod   String        @db.VarChar(50)
+  paymentStatus   PaymentStatus @default(PENDING)
+  stripePaymentId String?       @db.VarChar(191)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  items           OrderItem[]
+  tracking        OrderTracking[]
+  
+  @@index([userId])
+  @@index([orderNumber])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  
+  @@index([orderId])
+}
+
+model OrderTracking {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String   @db.VarChar(50)
+  message   String   @db.VarChar(500)
+  location  String?  @db.VarChar(191)
+  createdAt DateTime @default(now())
+  
+  @@index([orderId])
+}
+
+model Offer {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(191)
+  description String   @db.Text
+  discount    Float
+  code        String?  @unique @db.VarChar(50)
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  products    ProductOffer[]
+}
+
+model ProductOffer {
+  id        String  @id @default(cuid())
+  productId String  @db.VarChar(100)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offerId   String  @db.VarChar(100)
+  offer     Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, offerId])
+  @@index([productId])
+  @@index([offerId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+  
+  @@index([productId])
+  @@index([userId])
+}

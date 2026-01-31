@@ -2,12 +2,21 @@
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { ShoppingCart, Heart, Package, User, LogOut, Search, Menu, X } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import useCartStore from "@/store/cartStore"
 
 export default function Navbar() {
   const { data: session } = useSession()
   const [showDropdown, setShowDropdown] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const { cartCount, wishlistCount, refreshCartCount, refreshWishlistCount } = useCartStore()
+
+  useEffect(() => {
+    if (session) {
+      refreshCartCount()
+      refreshWishlistCount()
+    }
+  }, [session, refreshCartCount, refreshWishlistCount])
 
   return (
     <nav className="bg-gradient-to-r from-secondary via-accent-800 to-secondary text-white shadow-xl sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
@@ -34,13 +43,24 @@ export default function Navbar() {
               <span>Orders</span>
             </Link>
             <Link href="/wishlist" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center gap-2 group relative">
-              <Heart size={18} className="group-hover:scale-110 transition-transform" />
+              <div className="relative">
+                <Heart size={18} className="group-hover:scale-110 transition-transform" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold animate-scaleIn">
+                    {wishlistCount}
+                  </span>
+                )}
+              </div>
               <span>Wishlist</span>
             </Link>
             <Link href="/cart" className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center gap-2 group relative">
               <div className="relative">
                 <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold animate-scaleIn">
+                    {cartCount}
+                  </span>
+                )}
               </div>
               <span>Cart</span>
             </Link>
@@ -118,11 +138,25 @@ export default function Navbar() {
               <span>Orders</span>
             </Link>
             <Link href="/wishlist" className="block px-4 py-3 hover:bg-white/10 rounded-lg transition flex items-center gap-3">
-              <Heart size={18} />
+              <div className="relative">
+                <Heart size={18} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold text-[10px]">
+                    {wishlistCount}
+                  </span>
+                )}
+              </div>
               <span>Wishlist</span>
             </Link>
             <Link href="/cart" className="block px-4 py-3 hover:bg-white/10 rounded-lg transition flex items-center gap-3">
-              <ShoppingCart size={18} />
+              <div className="relative">
+                <ShoppingCart size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold text-[10px]">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
               <span>Cart</span>
             </Link>
             <div className="border-t border-white/10 mt-2 pt-2">

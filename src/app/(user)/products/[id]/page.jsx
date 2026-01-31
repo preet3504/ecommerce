@@ -5,6 +5,7 @@ import axios from "axios"
 import Link from "next/link"
 import toast, { Toaster } from "react-hot-toast"
 import { ArrowLeft, ShoppingCart, Heart, Package, Star, TrendingUp, Shield, Truck } from "lucide-react"
+import useCartStore from "@/store/cartStore"
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -14,6 +15,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [addingToCart, setAddingToCart] = useState(false)
   const [addingToWishlist, setAddingToWishlist] = useState(false)
+  const { refreshCartCount, refreshWishlistCount } = useCartStore()
 
   useEffect(() => {
     fetchProduct()
@@ -38,6 +40,7 @@ export default function ProductDetailPage() {
         productId: product.id,
         quantity
       })
+      await refreshCartCount()
       toast.success("Added to cart!", {
         icon: "🛒",
         style: {
@@ -59,6 +62,7 @@ export default function ProductDetailPage() {
       await axios.post("/api/wishlist", {
         productId: product.id
       })
+      await refreshWishlistCount()
       toast.success("Added to wishlist!", {
         icon: "❤️",
         style: {

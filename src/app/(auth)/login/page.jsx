@@ -27,7 +27,15 @@ export default function LoginPage() {
       setError("Invalid credentials")
       setLoading(false)
     } else {
-      router.push("/products")
+      // Fetch session to check user role
+      const response = await fetch("/api/auth/session")
+      const session = await response.json()
+      
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin/dashboard")
+      } else {
+        router.push("/products")
+      }
       router.refresh()
     }
   }

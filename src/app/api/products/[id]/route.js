@@ -10,8 +10,10 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         category: true,
         reviews: {
@@ -49,10 +51,11 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     
     const product = await prisma.product.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...body,
         price: body.price ? parseFloat(body.price) : undefined,
@@ -76,8 +79,10 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     await prisma.product.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: "Product deleted successfully" })
